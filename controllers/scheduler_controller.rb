@@ -1,4 +1,6 @@
 require_relative '../config/ruby_manifest.rb'
+require_relative '../models/movie.rb'
+require_relative '../models/schedule.rb'
 
 class SchedulerController
   attr_reader :load_view, :runner_view, :movie_loader, :today
@@ -15,7 +17,7 @@ class SchedulerController
   def run_program #This is the flow of your program, call other classes and methods to complete
     runner_view.reset_screen!
     load_view.ask_to_reload(today)
-    reload_input = gets.chomp
+    reload_input = gets.chomp.downcase
 
     if reload_input == 'yes'
       movie_loader.compile_todays_list
@@ -23,13 +25,32 @@ class SchedulerController
     end
 
     until finished
-      # logic for your program
+      file = File.read('movie_list.json')
+      data_hash = JSON.parse(file)
+      movies = []
+      data_hash.each do |movie|
+        movies << Movie.new(movie["title"], movie["time"], movie["rating"])
+      end
+      movies.each do |movie|
+        p movie.title
+      end
+
+      schedule = Schedule.new(movies)
 
       runner_view.ask_if_user_is_finished
-      user_choice = gets.chomp
+      user_choice = gets.chomp.downcase
 
       if user_choice == 'end'
         exit_program 
+      else
+        movies.each do |movie|
+          if user_choice.downcase == movie.title.downcase
+            p movie.title
+            p "This movie is #{movie.time.split().join(' ')} long."
+            p "Rated: #{movie.rating.split().join(' ')}"
+          end
+        end
+        break
       end
     end    
   end
